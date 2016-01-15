@@ -2,10 +2,12 @@
 
 var gulp = require("gulp");
 var connect = require("gulp-connect"); // runs a local dev server
-var open= require("gulp-open"); // open a URL in a web browser
+var open = require("gulp-open"); // open a URL in a web browser
 var browserify = require("browserify"); // bundles JS
 var reactify = require("reactify"); // transforms React JSX to JS
 var source = require("vinyl-source-stream"); // use conventional text streams with Gulp
+var concat = require("gulp-concat"); // concatenates files
+
 
 var config = {
   port: 9005,
@@ -13,6 +15,10 @@ var config = {
   paths: {
     html: "./src/*.html",
     js: "./src/**/*.js",
+    css: [
+      "node_modules/bootstrap/dist/css/bootstrap.min.css",
+      "node_modules/bootstrap/dist/css/bootstrap-theme.min.css"
+    ],
     mainJs: "./src/main.js",
     dist: "./dist"
   }
@@ -28,17 +34,20 @@ gulp.task("connect", function() {
   });
 });
 
+// open the browse in the specified url
 gulp.task("open", ["connect"], function() {
   gulp.src("dist/index.html")
       .pipe(open( { uri: config.devBaseUrl + ":"  + config.port + "/" }));
 });
 
+// copy html files to the destination folder
 gulp.task("html", function() {
   gulp.src(config.paths.html)
       .pipe(gulp.dest(config.paths.dist))
       .pipe(connect.reload());
 });
 
+// manipulate js files, bundling them and copying to the destination folder
 gulp.task("js", function() {
   browserify(config.paths.mainJs)
     .transform(reactify)
@@ -49,9 +58,19 @@ gulp.task("js", function() {
     .pipe(connect.reload());
 });
 
+// bundle css files and move to to destination folder
+gulp.task("css", function() {
+  gulp.src(config.paths.css)
+      .pipe(concat("bundle.css"))
+      .pipe(gulp.dest(config.paths.dist + "/css"))
+      .pipe(connect.reload());
+});
+
+// watch for file changes
 gulp.task("watch", function() {
   gulp.watch(config.paths.html, ["html"]);
   gulp.watch(config.paths.js, ["js"]);
+  gulp.watch(config.paths.css, ["css"]);
 })
 
-gulp.task("default", ["html", "js", "open", "watch"]);
+gulp.task("default", ["html", "js", "css", "open", "watch"]);
