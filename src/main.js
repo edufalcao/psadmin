@@ -34,5 +34,4 @@ var Header = require("./components/common/header");
 
   win.addEventListener("hashchange", render);
   render();
-
 })(window);
